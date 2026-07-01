@@ -7,8 +7,8 @@
 
 using namespace std;
 
+void clear() {cout<< "\033[2J\033[1;1H";}
 
- void clear() {cout<< "\033[2J\033[1;1H";}
 void rules(){
     clear();
     cout << "=========================================\n";
@@ -38,15 +38,8 @@ int randomNumber(){
     uniform_int_distribution<int> distribution(0,3);
     return distribution(generate);
 }
-
-void start(){
-    clear();
-    char nick[4];
-    int board[4][4] = {0};
-    int points;
-    board[randomNumber()][randomNumber()] = 2;
-    board[randomNumber()][randomNumber()] = 4;
-    for (int i = 0; i < 4; i++)
+void printBoard (int board[4][4]){
+     for (int i = 0; i < 4; i++)
     {
         for (int j = 0; j < 4; j++)
         {
@@ -57,6 +50,15 @@ void start(){
         }
         
     }
+}
+void start(){
+    clear();
+    char nick[4];
+    int board[4][4] = {0};
+    int points;
+    board[randomNumber()][randomNumber()] = 2;
+    board[randomNumber()][randomNumber()] = 4;
+    printBoard(board);
     
 }
  void menu() {
@@ -106,7 +108,6 @@ Escolha uma opcao: )";
                 default:
                     cout << "\nOpcao invalida\n";
             }
-
             if (opcao != 0) {
                 cout << "Pressione ENTER para voltar ao menu...";
                 cin.ignore();
