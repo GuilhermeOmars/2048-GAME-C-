@@ -3,25 +3,20 @@
 #include <ctime>
 #include <fstream>
 #include <chrono>
+#include <random>
 
 using namespace std;
 
-const int SIZE = 4;
-int board[SIZE][SIZE];
-int points = 0;
 
  void clear() {cout<< "\033[2J\033[1;1H";}
- void start(){
-    clear();
-}
 void rules(){
     clear();
-     cout << "=========================================\n";
+    cout << "=========================================\n";
     cout << "            COMO JOGAR 2048\n";
     cout << "=========================================\n\n";
 
     cout << "Objetivo:\n";
-    cout << "- Alcancar a peca de valor 2048.\n\n";
+    cout << "- Alcancar a peça de valor 2048.\n\n";
 
     cout << "Controles:\n";
     cout << "- W : mover para cima\n";
@@ -34,10 +29,35 @@ void rules(){
     cout << "- Pecas com o mesmo valor se unem ao colidir.\n";
     cout << "- O valor da nova peca sera a soma das duas.\n";
     cout << "- O jogo termina quando nao houver mais movimentos possiveis.\n\n";
-
     cout << "Pressione ENTER para voltar ao menu...";
-    cin.ignore();
-    cin.get();
+}
+
+int randomNumber(){
+    random_device rd;
+    mt19937 generate(rd());
+    uniform_int_distribution<int> distribution(0,3);
+    return distribution(generate);
+}
+
+void start(){
+    clear();
+    char nick[4];
+    int board[4][4] = {0};
+    int points;
+    board[randomNumber()][randomNumber()] = 2;
+    board[randomNumber()][randomNumber()] = 4;
+    for (int i = 0; i < 4; i++)
+    {
+        for (int j = 0; j < 4; j++)
+        {
+            cout<<board[i][j] << " ";
+            if(j+1 == 4){
+                cout<< "\n";
+            }
+        }
+        
+    }
+    
 }
  void menu() {
         int opcao;
@@ -69,7 +89,7 @@ Escolha uma opcao: )";
 
             switch (opcao) {
                 case 1:
-
+                    start();
                     break;
 
                 case 2:
@@ -92,7 +112,6 @@ Escolha uma opcao: )";
                 cin.ignore();
                 cin.get();
             }
-
         } while (opcao != 0);
     }
 
