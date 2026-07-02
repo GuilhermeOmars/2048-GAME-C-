@@ -51,7 +51,7 @@ void printBoard (int board[4][4]){
         
     }
 }
-void comando(int board[4][4]){
+void WASD(int board[4][4]){
     
     char tecla;
     cin>>tecla;
@@ -61,13 +61,10 @@ void comando(int board[4][4]){
     }
     switch (tecla) {
                 case 'w': case 'W':
-                    for (int i = 0; i < 4; i++)
-                    {
-                        for (int j = 0; j < 4; j++)
-                        {
-                            if(board[i][j] == 0){
-                                for (int k = i+1; k < 4; k++)
-                                {
+                    for (int i = 0; i < 4; i++){
+                        for (int j = 0; j < 4; j++){
+                            while(board[i][j] == 0 && (board[i+1][j]!=0||board[i+2][j]!=0||board[i+3][j]!=0)){
+                                for (int k = i+1; k < 4; k++){
                                     if(board[k][j] != 0){
                                         board[i][j] = board[k][j];
                                         board[k][j] = 0;
@@ -78,16 +75,12 @@ void comando(int board[4][4]){
                         }
                         
                     }
-                
 
                 case 'a': case 'A':
-                    for(int i = 0; i < 4; i++)
-                    {
-                        for (int j = 0; j < 4; j++)
-                        {
-                            if(board[i][j] == 0){
-                                for (int k = j+1; k < 4; k++)
-                                {
+                    for(int i = 0; i < 4; i++){
+                        for (int j = 0; j < 4; j++){
+                            while(board[i][j] == 0 && (board[i][j+1]!=0||board[i][j+2]!=0||board[i][j+3]!=0)){
+                                for (int k = j+1; k < 4; k++){
                                     if(board[i][k] != 0){
                                         board[i][j] = board[i][k];
                                         board[i][k] = 0;
@@ -100,13 +93,10 @@ void comando(int board[4][4]){
                     }
 
                 case 's': case 'S':
-                    for(int i = 3; i >= 0; i--)
-                    {
-                        for (int j = 0; j < 4; j++)
-                        {
-                            if(board[i][j] == 0){
-                                for (int k = i-1; k >= 0; k--)
-                                {
+                    for(int i = 3; i >= 0; i--){
+                        for (int j = 0; j < 4; j++){
+                            while(board[i][j] == 0 && (board[i-1][j]!=0||board[i-2][j]!=0||board[i-3][j]!=0)){
+                                for (int k = i-1; k >= 0; k--){
                                     if(board[k][j] != 0){
                                         board[i][j] = board[k][j];
                                         board[k][j] = 0;
@@ -119,13 +109,10 @@ void comando(int board[4][4]){
                     }
 
                 case 'd': case 'D':
-                    for(int i = 0; i < 4; i++)
-                    {
-                        for (int j = 3; j >= 0; j--)
-                        {
-                            if(board[i][j] == 0){
-                                for (int k = j-1; k >= 0; k--)
-                                {
+                    for(int i = 0; i < 4; i++){
+                        for (int j = 3; j >= 0; j--){
+                            while(board[i][j] == 0 && (board[i][j-1]!=0||board[i][j-2]!=0||board[i][j-3]!=0)){
+                                for (int k = j-1; k >= 0; k--){
                                     if(board[i][k] != 0){
                                         board[i][j] = board[i][k];
                                         board[i][k] = 0;
@@ -149,6 +136,7 @@ void start(){
     board[randomNumber()][randomNumber()] = 2;
     board[randomNumber()][randomNumber()] = 4;
     printBoard(board);
+    
     
     
 }
