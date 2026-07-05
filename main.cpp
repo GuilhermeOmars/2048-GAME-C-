@@ -7,146 +7,223 @@
 
 using namespace std;
 
-void clear() {cout<< "\033[2J\033[1;1H";}
+void clear() {
+    cout << "\033[2J\033[1;1H";
+}
 
-void rules(){
+void rules() {
     clear();
     cout << "=========================================\n";
     cout << "            COMO JOGAR 2048\n";
     cout << "=========================================\n\n";
 
     cout << "Objetivo:\n";
-    cout << "- Alcancar a peça de valor 2048.\n\n";
+    cout << "- Alcançar a peça de valor 2048.\n\n";
 
     cout << "Controles:\n";
     cout << "- W : mover para cima\n";
-    cout << "- A : mover para a esquerda\n";
+    cout << "- A : mover para esquerda\n";
     cout << "- S : mover para baixo\n";
-    cout << "- D : mover para a direita\n\n";
+    cout << "- D : mover para direita\n\n";
 
     cout << "Regras:\n";
-    cout << "- A cada movimento surge uma nova peca (2 ou 4).\n";
-    cout << "- Pecas com o mesmo valor se unem ao colidir.\n";
-    cout << "- O valor da nova peca sera a soma das duas.\n";
-    cout << "- O jogo termina quando nao houver mais movimentos possiveis.\n\n";
-    cout << "Pressione ENTER para voltar ao menu...";
+    cout << "- A cada movimento surge uma nova peça.\n";
+    cout << "- Peças iguais se unem.\n";
+    cout << "- O jogo termina quando não houver movimentos possiveís.\n";
 }
 
-int randomNumber(){
-    random_device rd;
-    mt19937 generate(rd());
-    uniform_int_distribution<int> distribution(0,3);
-    return distribution(generate);
+int randomNumber() {
+    static random_device rd;
+    static mt19937 gen(rd());
+    uniform_int_distribution<int> dist(0,3);
+    return dist(gen);
 }
-void printBoard (int board[4][4]){
-     for (int i = 0; i < 4; i++)
-    {
-        for (int j = 0; j < 4; j++)
-        {
-            cout<<board[i][j] << " ";
-            if(j+1 == 4){
-                cout<< "\n";
-            }
+
+void printBoard(int board[4][4]) {
+    clear();
+
+    for(int i=0;i<4;i++) {
+
+        for(int j=0;j<4;j++) {
+
+            cout << board[i][j] << " ";
         }
-        
+
+        cout << endl;
     }
 }
 void WASD(int board[4][4]){
-    
+
     char tecla;
-    cin>>tecla;
-    while(tecla != 'w' && tecla != 'W' && tecla != 'a' && tecla != 'A' && tecla != 's' && tecla != 'S' && tecla != 'd' && tecla != 'D'){
-        cout << "\nDigite uma tecla válida\n";
-        cin>>tecla;
+    cout << "\nMovimento (W A S D): ";
+    cin >> tecla;
+
+    while(tecla!='w' && tecla!='W' &&
+          tecla!='a' && tecla!='A' &&
+          tecla!='s' && tecla!='S' &&
+          tecla!='d' && tecla!='D'){
+
+        cout << "Digite uma tecla valida: ";
+        cin >> tecla;
     }
-    switch (tecla) {
-                case 'w': case 'W':
-                    for (int i = 0; i < 4; i++){
-                        for (int j = 0; j < 4; j++){
-                            while(board[i][j] == 0 && (board[i+1][j]!=0||board[i+2][j]!=0||board[i+3][j]!=0)){
-                                for (int k = i+1; k < 4; k++){
-                                    if(board[k][j] != 0){
-                                        board[i][j] = board[k][j];
-                                        board[k][j] = 0;
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                        
+
+    switch(tecla){
+
+    case 'w':
+    case 'W':
+
+        for(int j=0;j<4;j++){
+            for(int i=1;i<4;i++){
+
+                if(board[i][j]!=0){
+
+                    int k=i;
+
+                    while(k>0 && board[k-1][j]==0){
+
+                        board[k-1][j]=board[k][j];
+                        board[k][j]=0;
+                        k--;
+
                     }
 
-                case 'a': case 'A':
-                    for(int i = 0; i < 4; i++){
-                        for (int j = 0; j < 4; j++){
-                            while(board[i][j] == 0 && (board[i][j+1]!=0||board[i][j+2]!=0||board[i][j+3]!=0)){
-                                for (int k = j+1; k < 4; k++){
-                                    if(board[i][k] != 0){
-                                        board[i][j] = board[i][k];
-                                        board[i][k] = 0;
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                        
-                    }
+                }
 
-                case 's': case 'S':
-                    for(int i = 3; i >= 0; i--){
-                        for (int j = 0; j < 4; j++){
-                            while(board[i][j] == 0 && (board[i-1][j]!=0||board[i-2][j]!=0||board[i-3][j]!=0)){
-                                for (int k = i-1; k >= 0; k--){
-                                    if(board[k][j] != 0){
-                                        board[i][j] = board[k][j];
-                                        board[k][j] = 0;
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                        
-                    }
-
-                case 'd': case 'D':
-                    for(int i = 0; i < 4; i++){
-                        for (int j = 3; j >= 0; j--){
-                            while(board[i][j] == 0 && (board[i][j-1]!=0||board[i][j-2]!=0||board[i][j-3]!=0)){
-                                for (int k = j-1; k >= 0; k--){
-                                    if(board[i][k] != 0){
-                                        board[i][j] = board[i][k];
-                                        board[i][k] = 0;
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                        
-                    }
             }
-}
-void start(){
-    clear();
-    char nick[4];
-    cout<<" Digite seu nick (3 caracteres): \n";
-    cin.getline(nick, 4);
-    clear();
-    int board[4][4] = {0};
-    int points;
-    board[randomNumber()][randomNumber()] = 2;
-    board[randomNumber()][randomNumber()] = 4;
+        }
+
+        break;
+
+    case 's':
+    case 'S':
+
+        for(int j=0;j<4;j++){
+            for(int i=2;i>=0;i--){
+
+                if(board[i][j]!=0){
+
+                    int k=i;
+
+                    while(k<3 && board[k+1][j]==0){
+
+                        board[k+1][j]=board[k][j];
+                        board[k][j]=0;
+                        k++;
+
+                    }
+
+                }
+
+            }
+        }
+
+        break;
+
+    case 'a':
+    case 'A':
+
+        for(int i=0;i<4;i++){
+            for(int j=1;j<4;j++){
+
+                if(board[i][j]!=0){
+
+                    int k=j;
+
+                    while(k>0 && board[i][k-1]==0){
+
+                        board[i][k-1]=board[i][k];
+                        board[i][k]=0;
+                        k--;
+
+                    }
+
+                }
+
+            }
+        }
+
+        break;
+
+    case 'd':
+    case 'D':
+
+        for(int i=0;i<4;i++){
+            for(int j=2;j>=0;j--){
+
+                if(board[i][j]!=0){
+
+                    int k=j;
+
+                    while(k<3 && board[i][k+1]==0){
+
+                        board[i][k+1]=board[i][k];
+                        board[i][k]=0;
+                        k++;
+
+                    }
+
+                }
+
+            }
+        }
+
+        break;
+    }
+
     printBoard(board);
-    
-    
-    
 }
- void menu() {
-        int opcao;
 
-        do {
-            clear();
+void start(){
 
-            cout << R"(
+    clear();
+
+    char nick[5];
+
+    cout << "Digite seu nick (4 caracteres): ";
+
+    cin.ignore();
+
+    cin.getline(nick,5);
+
+    int board[4][4]={0};
+
+    int points=0;
+
+    int l1,c1,l2,c2;
+
+    do{
+
+        l1=randomNumber();
+        c1=randomNumber();
+        l2=randomNumber();
+        c2=randomNumber();
+
+    }while(l1==l2 && c1==c2);
+
+    board[l1][c1]=2;
+    board[l2][c2]=4;
+
+    while(true){
+
+        printBoard(board);
+
+        cout << "\nJogador: " << nick;
+        cout << "\nPontos: " << points << endl;
+
+        WASD(board);
+
+    }
+
+}
+void menu() {
+
+    int opcao;
+
+    do {
+
+        clear();
+
+        cout << R"(
 
  ██████╗  ██████╗ ██╗  ██╗ █████╗
  ╚════██╗██╔═████╗██║  ██║██╔══██╗
@@ -166,38 +243,50 @@ void start(){
 
 Escolha uma opcao: )";
 
-            cin >> opcao;
+        cin >> opcao;
 
-            switch (opcao) {
-                case 1:
-                    start();
-                    break;
+        switch(opcao){
 
-                case 2:
-                    break;
+        case 1:
+            start();
+            break;
 
-                case 3:
-                    rules();
-                    break;
+        case 2:
 
-                case 0:
-                    cout << "\nObrigado por jogar\n";
-                    break;
+            clear();
+            cout << "Ranking ainda nao implementado.\n";
+            break;
 
-                default:
-                    cout << "\nOpcao invalida\n";
-            }
-            if (opcao != 0) {
-                cout << "Pressione ENTER para voltar ao menu...";
-                cin.ignore();
-                cin.get();
-            }
-        } while (opcao != 0);
-    }
+        case 3:
 
-int main (){
+            rules();
+            break;
+
+        case 0:
+
+            cout << "\nObrigado por jogar!\n";
+            break;
+
+        default:
+
+            cout << "\nOpção invalida!\n";
+        }
+
+        if(opcao != 0 && opcao != 1){
+
+            cout << "\n\nPressione ENTER para voltar ao menu...";
+
+            cin.ignore(1000,'\n');
+            cin.get();
+
+        }
+
+    }while(opcao != 0);
+}
+
+int main(){
+
     menu();
-    
 
     return 0;
 }
