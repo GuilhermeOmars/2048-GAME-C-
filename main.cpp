@@ -7,6 +7,15 @@
 
 using namespace std;
 
+struct jogador{
+    char nick[5];
+    int points = 0;
+};
+
+int indice = 0;
+
+void menu();
+
 void clear() {
     cout << "\033[2J\033[1;1H";
 }
@@ -24,7 +33,8 @@ void rules() {
     cout << "- W : mover para cima\n";
     cout << "- A : mover para esquerda\n";
     cout << "- S : mover para baixo\n";
-    cout << "- D : mover para direita\n\n";
+    cout << "- D : mover para direita\n";
+    cout << "- Q : sair do jogo\n\n";
 
     cout << "Regras:\n";
     cout << "- A cada movimento surge uma nova peça.\n";
@@ -52,16 +62,54 @@ void printBoard(int board[4][4]) {
         cout << endl;
     }
 }
-void WASD(int board[4][4]){
+void placar(jogador info[]){
+    clear();
+    cout << "=========================================\n";
+    cout << "                RANKING\n";
+    cout << "=========================================\n\n";
+    int num = 1;
+    jogador maior, menor;
+    for(int i = 0; i<indice; i++){
+        for(int f = i + 1; f<indice; f++){
+            if(info[i].points<info[f].points){
+                maior = info[f];
+                menor = info[i];
+                info[i] = maior;
+                info[f] = menor;
+                
+            }
+            else if(info[i].points>info[f].points){
+                maior = info[i];
+                menor = info[f];
+                info[i] = maior;
+                info[f] = menor;
+            }
+            else{
+                maior = info[i];
+                menor = info[f];
+                info[i] = maior;
+                info[f] = menor;
+            }
+        }
+    }
+    for(int k = 0; k<indice; k++)
+    {
+        cout<<num<<" - "<<info[k].nick<<" "<<info[k].points<<"\n";
+        num++;
+    }
+}
+bool WASD(int board[4][4]){
 
     char tecla;
     cout << "\nMovimento (W A S D): ";
+    cout << "\nSair (Q): ";
     cin >> tecla;
 
     while(tecla!='w' && tecla!='W' &&
           tecla!='a' && tecla!='A' &&
           tecla!='s' && tecla!='S' &&
-          tecla!='d' && tecla!='D'){
+          tecla!='d' && tecla!='D' &&
+          tecla!='q' && tecla!='Q'){
 
         cout << "Digite uma tecla valida: ";
         cin >> tecla;
@@ -168,26 +216,27 @@ void WASD(int board[4][4]){
         }
 
         break;
+        
+    case 'q':
+    case 'Q':
+        return false;
+        break;
     }
-
     printBoard(board);
+    return true;
 }
 
-void start(){
-
+void start(jogador info[]){
+    
     clear();
-
-    char nick[5];
 
     cout << "Digite seu nick (4 caracteres): ";
 
     cin.ignore();
 
-    cin.getline(nick,5);
+    cin.getline(info[indice].nick,5);
 
     int board[4][4]={0};
-
-    int points=0;
 
     int l1,c1,l2,c2;
 
@@ -207,18 +256,20 @@ void start(){
 
         printBoard(board);
 
-        cout << "\nJogador: " << nick;
-        cout << "\nPontos: " << points << endl;
+        cout << "\nJogador: " << info[indice].nick;
+        cout << "\nPontos: " << info[indice].points << endl;
 
-        WASD(board);
-
+        if(!WASD(board)){
+            indice++;
+            return;
+        }
     }
 
 }
 void menu() {
 
     int opcao;
-
+    jogador info[10];
     do {
 
         clear();
@@ -248,13 +299,12 @@ Escolha uma opcao: )";
         switch(opcao){
 
         case 1:
-            start();
+            start(info);
             break;
 
         case 2:
 
-            clear();
-            cout << "Ranking ainda nao implementado.\n";
+            placar(info);
             break;
 
         case 3:
