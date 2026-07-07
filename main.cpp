@@ -25,7 +25,6 @@ void clear() {
     cout << "\033[2J\033[1;1H";
 }
 
-// Função auxiliar para ler o teclado sem bloquear o programa e sem precisar de carregar no ENTER
 int autoEnter() {
     struct termios oldt, newt;
     int ch;
@@ -51,7 +50,6 @@ int autoEnter() {
     return 0;
 }
 
-// Função auxiliar para capturar o caractere digitado imediatamente
 char getch() {
     struct termios oldt, newt;
     char ch;
@@ -236,15 +234,12 @@ bool WASD(int board[4][4], jogador &info_atual) {
 
     cout << "\nMovimento (W A S D) ou Sair (Q): \n";
     
-    // Captura o momento em que entramos na espera da tecla
     auto inicio_espera = chrono::steady_clock::now();
 
-    // Loop contínuo que atualiza o tempo enquanto o utilizador não carrega em nada
     while (!pressionou) {
         auto agora = chrono::steady_clock::now();
         long segundos_decorridos = chrono::duration_cast<chrono::seconds>(agora - inicio_espera).count();
         
-        // Se passou 1 segundo ou mais, atualiza o tempo do jogador e redesenha o placar
         if (segundos_decorridos >= 1) {
             info_atual.tempo += segundos_decorridos;
             printBoard(board);
@@ -252,7 +247,7 @@ bool WASD(int board[4][4], jogador &info_atual) {
             cout << "\nPontos: " << info_atual.points;
             cout << "\nTempo: " << info_atual.tempo << "s\n";
             cout << "\nMovimento (W A S D) ou Sair (Q): \n";
-            inicio_espera = agora; // Reinicia a contagem do segundo atual
+            inicio_espera = agora; 
         }
 
         if (autoEnter()) {
@@ -269,7 +264,7 @@ bool WASD(int board[4][4], jogador &info_atual) {
     if (tecla == 'q') return false; 
 
     if (tecla != 'w' && tecla != 'a' && tecla != 's' && tecla != 'd') {
-        return true; // Ignora teclas inválidas sem quebrar o jogo
+        return true;
     }
 
     int copia[4][4];
