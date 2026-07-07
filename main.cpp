@@ -10,6 +10,7 @@ using namespace std;
 struct jogador{
     char nick[5];
     int points = 0;
+    long tempo = 0;
 };
 
 int indice = 0;
@@ -122,25 +123,35 @@ void placar(jogador info[]){
     }
     for(int k = 0; k<indice; k++)
     {
-        cout<<num<<" - "<<info[k].nick<<" "<<info[k].points<<"\n";
+        cout<<num<<" - "<<info[k].nick<<" "<<info[k].points<<" Tempo: "<<info[k].tempo<<"\n";
         num++;
     }
 }
-bool WASD(int board[4][4]){
+bool WASD(int board[4][4], jogador info[]){
 
     char tecla;
     cout << "\nMovimento (W A S D): ";
     cout << "\nSair (Q): ";
+    auto inicio = chrono :: steady_clock :: now();
     cin >> tecla;
-
+    auto fim = chrono :: steady_clock :: now();
+    info[indice].tempo +=
+        chrono :: duration_cast<
+        chrono :: seconds
+        >(fim - inicio).count();
     while(tecla!='w' && tecla!='W' &&
           tecla!='a' && tecla!='A' &&
           tecla!='s' && tecla!='S' &&
           tecla!='d' && tecla!='D' &&
           tecla!='q' && tecla!='Q'){
-
         cout << "Digite uma tecla valida: ";
+        auto inicio = chrono :: steady_clock :: now();
         cin >> tecla;
+        auto fim = chrono :: steady_clock :: now();
+        info[indice].tempo +=
+        chrono :: duration_cast<
+        chrono :: seconds
+        >(fim - inicio).count();
     }
 
     switch(tecla){
@@ -301,7 +312,7 @@ void start(jogador info[]){
         cout << "\nJogador: " << info[indice].nick;
         cout << "\nPontos: " << info[indice].points << endl;
 
-        if(!WASD(board)){
+        if(!WASD(board, info)){
             indice++;
             return;
         }
