@@ -48,6 +48,34 @@ int randomNumber() {
     uniform_int_distribution<int> dist(0,3);
     return dist(gen);
 }
+    void spawnNumber(int board[4][4]){
+
+    bool vazio = false;
+
+    for(int i = 0; i < 4; i++){
+        for(int j = 0; j < 4; j++){
+            if(board[i][j] == 0){
+                vazio = true;
+            }
+        }
+    }
+
+    if(!vazio)
+        return;
+
+    int linha, coluna;
+
+    do{
+        linha = randomNumber();
+        coluna = randomNumber();
+    }while(board[linha][coluna] != 0);
+
+    if(randomNumber() == 0)
+        board[linha][coluna] = 4;  
+    else
+        board[linha][coluna] = 2; 
+}
+
 
 void printBoard(int board[4][4]) {
     clear();
@@ -117,105 +145,117 @@ bool WASD(int board[4][4]){
 
     switch(tecla){
 
-    case 'w':
-    case 'W':
+case 'w':
+case 'W':
 
-        for(int j=0;j<4;j++){
-            for(int i=1;i<4;i++){
+    for(int j = 0; j < 4; j++){
+        for(int i = 1; i < 4; i++){
 
-                if(board[i][j]!=0){
+            if(board[i][j] != 0){
 
-                    int k=i;
+                int k = i;
 
-                    while(k>0 && board[k-1][j]==0){
-
-                        board[k-1][j]=board[k][j];
-                        board[k][j]=0;
-                        k--;
-
-                    }
-
+                while(k > 0 && board[k-1][j] == 0){
+                    board[k-1][j] = board[k][j];
+                    board[k][j] = 0;
+                    k--;
                 }
 
+                while(k > 0 &&
+                      board[k-1][j] == board[k][j]){
+
+                    board[k-1][j] += board[k][j];
+                    board[k][j] = 0;
+                    break;
+                }
             }
         }
+    }
+    break;
 
-        break;
+case 's':
+case 'S':
 
-    case 's':
-    case 'S':
+    for(int j = 0; j < 4; j++){
+        for(int i = 2; i >= 0; i--){
 
-        for(int j=0;j<4;j++){
-            for(int i=2;i>=0;i--){
+            if(board[i][j] != 0){
 
-                if(board[i][j]!=0){
+                int k = i;
 
-                    int k=i;
-
-                    while(k<3 && board[k+1][j]==0){
-
-                        board[k+1][j]=board[k][j];
-                        board[k][j]=0;
-                        k++;
-
-                    }
-
+                while(k < 3 && board[k+1][j] == 0){
+                    board[k+1][j] = board[k][j];
+                    board[k][j] = 0;
+                    k++;
                 }
 
+                while(k < 3 &&
+                      board[k+1][j] == board[k][j]){
+
+                    board[k+1][j] += board[k][j];
+                    board[k][j] = 0;
+                    break;
+                }
             }
         }
+    }
+    break;
 
-        break;
+case 'a':
+case 'A':
 
-    case 'a':
-    case 'A':
+    for(int i = 0; i < 4; i++){
+        for(int j = 1; j < 4; j++){
 
-        for(int i=0;i<4;i++){
-            for(int j=1;j<4;j++){
+            if(board[i][j] != 0){
 
-                if(board[i][j]!=0){
+                int k = j;
 
-                    int k=j;
-
-                    while(k>0 && board[i][k-1]==0){
-
-                        board[i][k-1]=board[i][k];
-                        board[i][k]=0;
-                        k--;
-
-                    }
-
+                while(k > 0 && board[i][k-1] == 0){
+                    board[i][k-1] = board[i][k];
+                    board[i][k] = 0;
+                    k--;
                 }
 
+                while(k > 0 &&
+                      board[i][k-1] == board[i][k]){
+
+                    board[i][k-1] += board[i][k];
+                    board[i][k] = 0;
+                    break;
+                }
             }
         }
+    }
+    break;
 
-        break;
+case 'd':
+case 'D':
 
-    case 'd':
-    case 'D':
+    for(int i = 0; i < 4; i++){
+        for(int j = 2; j >= 0; j--){
 
-        for(int i=0;i<4;i++){
-            for(int j=2;j>=0;j--){
+            if(board[i][j] != 0){
 
-                if(board[i][j]!=0){
+                int k = j;
 
-                    int k=j;
-
-                    while(k<3 && board[i][k+1]==0){
-
-                        board[i][k+1]=board[i][k];
-                        board[i][k]=0;
-                        k++;
-
-                    }
-
+                while(k < 3 && board[i][k+1] == 0){
+                    board[i][k+1] = board[i][k];
+                    board[i][k] = 0;
+                    k++;
                 }
 
+                while(k < 3 &&
+                      board[i][k+1] == board[i][k]){
+
+                    board[i][k+1] += board[i][k];
+                    board[i][k] = 0;
+                    break;
+                }
             }
         }
-
-        break;
+    }
+    break;
         
     case 'q':
     case 'Q':
@@ -248,7 +288,9 @@ void start(jogador info[]){
         c2=randomNumber();
 
     }while(l1==l2 && c1==c2);
-
+    /* test de números enquanto a função que vai gerar o números nn estiver pronta
+     board[l2][c1] =2; 
+    board[l1][c2] = 4; */
     board[l1][c1]=2;
     board[l2][c2]=4;
 
