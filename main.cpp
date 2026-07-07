@@ -1,18 +1,14 @@
 #include <iostream>
 #include <cstdlib>
-#include <ctime>
 #include <fstream>
 #include <chrono>
 #include <random>
 #include <iomanip>
-#include <unistd.h>
-#include <termios.h>
-#include <fcntl.h>
 
 using namespace std;
 
 struct jogador {
-    char nick[6];
+    char nick[6]; 
     int points = 0;
     long tempo = 0;
 };
@@ -23,43 +19,6 @@ void menu();
 
 void clear() {
     cout << "\033[2J\033[1;1H";
-}
-
-int autoEnter() {
-    struct termios oldt, newt;
-    int ch;
-    int oldf;
-
-    tcgetattr(STDIN_FILENO, &oldt);
-    newt = oldt;
-    newt.c_lflag &= ~(ICANON | ECHO);
-    tcsetattr(STDIN_FILENO, TCSANOW, &newt);
-    oldf = fcntl(STDIN_FILENO, F_GETFL, 0);
-    fcntl(STDIN_FILENO, F_SETFL, oldf | O_NONBLOCK);
-
-    ch = getchar();
-
-    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
-    fcntl(STDIN_FILENO, F_SETFL, oldf);
-
-    if(ch != EOF) {
-        ungetc(ch, stdin);
-        return 1;
-    }
-
-    return 0;
-}
-
-char getch() {
-    struct termios oldt, newt;
-    char ch;
-    tcgetattr(STDIN_FILENO, &oldt);
-    newt = oldt;
-    newt.c_lflag &= ~(ICANON | ECHO);
-    tcsetattr(STDIN_FILENO, TCSANOW, &newt);
-    ch = getchar();
-    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
-    return ch;
 }
 
 void rules() {
@@ -229,43 +188,25 @@ bool checkGameOver(int board[4][4]) {
 }
 
 bool WASD(int board[4][4], jogador &info_atual) {
-    char tecla = ' ';
-    bool pressionou = false;
-
-    cout << "\nMovimento (W A S D) ou Sair (Q): \n";
+    char tecla;
+    cout << "\nMovimento (W A S D) ou Sair (Q): ";
     
-    auto inicio_espera = chrono::steady_clock::now();
-
-    while (!pressionou) {
-        auto agora = chrono::steady_clock::now();
-        long segundos_decorridos = chrono::duration_cast<chrono::seconds>(agora - inicio_espera).count();
-        
-        if (segundos_decorridos >= 1) {
-            info_atual.tempo += segundos_decorridos;
-            printBoard(board);
-            cout << "\nJogador: " << info_atual.nick;
-            cout << "\nPontos: " << info_atual.points;
-            cout << "\nTempo: " << info_atual.tempo << "s\n";
-            cout << "\nMovimento (W A S D) ou Sair (Q): \n";
-            inicio_espera = agora; 
-        }
-
-        if (autoEnter()) {
-            tecla = getch();
-            pressionou = true;
-        }
-            usleep(10000);
-    }
-
-    auto fim_clique = chrono::steady_clock::now();
-    info_atual.tempo += chrono::duration_cast<chrono::seconds>(fim_clique - inicio_espera).count();
+    auto inicio = chrono::steady_clock::now();
+    cin >> tecla;
+    auto fim = chrono::steady_clock::now();
+    info_atual.tempo += chrono::duration_cast<chrono::seconds>(fim - inicio).count();
 
     tecla = tolower(tecla);
-    if (tecla == 'q') return false; 
-
-    if (tecla != 'w' && tecla != 'a' && tecla != 's' && tecla != 'd') {
-        return true;
+    while (tecla != 'w' && tecla != 'a' && tecla != 's' && tecla != 'd' && tecla != 'q') {
+        cout << "Digite uma tecla valida: ";
+        inicio = chrono::steady_clock::now();
+        cin >> tecla;
+        fim = chrono::steady_clock::now();
+        info_atual.tempo += chrono::duration_cast<chrono::seconds>(fim - inicio).count();
+        tecla = tolower(tecla);
     }
+
+    if (tecla == 'q') return false; 
 
     int copia[4][4];
     for (int i = 0; i < 4; i++) {
@@ -347,7 +288,7 @@ bool WASD(int board[4][4], jogador &info_atual) {
                     if (k < 3 && board[i][k + 1] == board[i][k] && !combinado[i][k + 1]) {
                         board[i][k + 1] *= 2;
                         info_atual.points += board[i][k + 1]; 
-                        board[k][j] = 0;
+                        board[i][k] = 0; // Corrigido aqui de board[k][j] para board[i][k]
                         combinado[i][k + 1] = true; 
                     }
                 }
@@ -385,19 +326,18 @@ void start(jogador info[]) {
         printBoard(board);
 
         cout << "\nJogador: " << p.nick;
-        cout << "\nPontos: " << p.points;
-        cout << "\nTempo: " << p.tempo << "s\n";
+        cout << "\nPontos: " << p.points << "\n";
 
         if (checkWin(board)) { 
             printBoard(board);
-            cout << "\n PARABÉNS! Você alcançou a peça 2048 e venceu!\n";
+            cout << "\nPARABENS! Voce alcancou a peca 2048 e venceu!\n";
             updateRanking(p); 
             break;
         }
 
         if (checkGameOver(board)) { 
             printBoard(board);
-            cout << "\n FIM DE JOGO seu BETA! Não há mais movimentos possíveis.\n";
+            cout << "\nFIM DE JOGO! Nao ha mais movimentos possiveis.\n";
             updateRanking(p); 
             break;
         }
@@ -409,7 +349,7 @@ void start(jogador info[]) {
         }
     }
     
-    cin.ignore(67, '\n');
+    cout << "\nPressione ENTER para continuar...";
     cin.get();
 }
 
@@ -457,12 +397,12 @@ Escolha uma opcao: )";
                 cout << "\nObrigado por jogar!\n";
                 break;
             default:
-                cout << "\nOpção invalida!\n";
+                cout << "\nOpcao invalida!\n";
         }
 
         if (opcao != 0 && opcao != 1) {
             cout << "\n\nPressione ENTER para voltar ao menu...";
-            cin.ignore(1000, '\n');
+            cin.ignore(1, '\n');
             cin.get();
         }
 
