@@ -390,7 +390,7 @@ void start(jogador info[]) {
 
         if (checkWin(board)) { 
             printBoard(board);
-            cout << "\n🎉 PARABÉNS! Você alcançou a peça 2048 e venceu!\n";
+            cout << "\n PARABÉNS! Você alcançou a peça 2048 e venceu!\n";
             updateRanking(p); 
             break;
         }
@@ -409,7 +409,6 @@ void start(jogador info[]) {
         }
     }
     
-    cout << "\nPressione ENTER para continuar...";
     cin.ignore(67, '\n');
     cin.get();
 }
