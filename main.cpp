@@ -4,16 +4,20 @@
 #include <fstream>
 #include <chrono>
 #include <random>
+#include <iomanip>
+#include <unistd.h>
+#include <termios.h>
+#include <fcntl.h>
 
 using namespace std;
 
-struct jogador{
-    char nick[5];
+struct jogador {
+    char nick[6];
     int points = 0;
     long tempo = 0;
 };
 
-int indice = 0;
+const string ARQUIVO_RANKING = "ranking.txt";
 
 void menu();
 
@@ -21,314 +25,406 @@ void clear() {
     cout << "\033[2J\033[1;1H";
 }
 
+// Função auxiliar para ler o teclado sem bloquear o programa e sem precisar de carregar no ENTER
+int autoEnter() {
+    struct termios oldt, newt;
+    int ch;
+    int oldf;
+
+    tcgetattr(STDIN_FILENO, &oldt);
+    newt = oldt;
+    newt.c_lflag &= ~(ICANON | ECHO);
+    tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+    oldf = fcntl(STDIN_FILENO, F_GETFL, 0);
+    fcntl(STDIN_FILENO, F_SETFL, oldf | O_NONBLOCK);
+
+    ch = getchar();
+
+    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+    fcntl(STDIN_FILENO, F_SETFL, oldf);
+
+    if(ch != EOF) {
+        ungetc(ch, stdin);
+        return 1;
+    }
+
+    return 0;
+}
+
+// Função auxiliar para capturar o caractere digitado imediatamente
+char getch() {
+    struct termios oldt, newt;
+    char ch;
+    tcgetattr(STDIN_FILENO, &oldt);
+    newt = oldt;
+    newt.c_lflag &= ~(ICANON | ECHO);
+    tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+    ch = getchar();
+    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+    return ch;
+}
+
 void rules() {
     clear();
     cout << "=========================================\n";
     cout << "            COMO JOGAR 2048\n";
     cout << "=========================================\n\n";
-
     cout << "Objetivo:\n";
     cout << "- Alcançar a peça de valor 2048.\n\n";
-
     cout << "Controles:\n";
     cout << "- W : mover para cima\n";
     cout << "- A : mover para esquerda\n";
     cout << "- S : mover para baixo\n";
     cout << "- D : mover para direita\n";
     cout << "- Q : sair do jogo\n\n";
-
     cout << "Regras:\n";
     cout << "- A cada movimento surge uma nova peça.\n";
     cout << "- Peças iguais se unem.\n";
-    cout << "- O jogo termina quando não houver movimentos possiveís.\n";
+    cout << "- O jogo termina quando não houver movimentos possíveis.\n";
 }
 
 int randomNumber() {
     static random_device rd;
     static mt19937 gen(rd());
-    uniform_int_distribution<int> dist(0,3);
+    uniform_int_distribution<int> dist(0, 3);
     return dist(gen);
 }
-    void spawnNumber(int board[4][4]){
 
+void spawnNumber(int board[4][4]) {
     bool vazio = false;
-
-    for(int i = 0; i < 4; i++){
-        for(int j = 0; j < 4; j++){
-            if(board[i][j] == 0){
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 4; j++) {
+            if (board[i][j] == 0) {
                 vazio = true;
             }
         }
     }
-
-    if(!vazio)
-        return;
+    if (!vazio) return;
 
     int linha, coluna;
-
-    do{
+    do {
         linha = randomNumber();
         coluna = randomNumber();
-    }while(board[linha][coluna] != 0);
+    } while (board[linha][coluna] != 0);
 
-    if(randomNumber() == 0)
+    if (randomNumber() == 0)
         board[linha][coluna] = 4;  
     else
         board[linha][coluna] = 2; 
 }
 
+string getColor(int value) {
+    switch (value) {
+        case 2:    return "\033[38;5;251m"; 
+        case 4:    return "\033[38;5;222m"; 
+        case 8:    return "\033[38;5;208m"; 
+        case 16:   return "\033[38;5;202m"; 
+        case 32:   return "\033[38;5;196m"; 
+        case 64:   return "\033[38;5;160m"; 
+        case 128:  return "\033[38;5;228m"; 
+        case 256:  return "\033[38;5;220m"; 
+        case 512:  return "\033[38;5;114m"; 
+        case 1024: return "\033[38;5;42m";  
+        case 2048: return "\033[38;5;45m";  
+        default:   return "\033[38;5;93m";  
+    }
+}
 
 void printBoard(int board[4][4]) {
     clear();
-
-    for(int i=0;i<4;i++) {
-
-        for(int j=0;j<4;j++) {
-
-            cout << board[i][j] << " ";
+    cout << "============= 2048 =============\n\n";
+    for (int i = 0; i < 4; i++) {
+        cout << "  ";
+        for (int j = 0; j < 4; j++) {
+            if (board[i][j] == 0) {
+                cout << "\033[0m" << setw(5) << ".";
+            } else {
+                cout << getColor(board[i][j]) << setw(5) << board[i][j] << "\033[0m";
+            }
         }
-
-        cout << endl;
+        cout << "\n\n";
     }
+    cout << "================================\n";
 }
-void placar(jogador info[]){
+
+int loadRanking(jogador lista[]) {
+    ifstream arq(ARQUIVO_RANKING, ios::in);
+    if (!arq) return 0; 
+
+    int qtd = 0;
+    while (qtd < 5 && arq >> lista[qtd].nick >> lista[qtd].points >> lista[qtd].tempo) {
+        qtd++;
+    }
+    arq.close();
+    return qtd;
+}
+
+void saveRanking(jogador lista[], int qtd) {
+    ofstream arq(ARQUIVO_RANKING, ios::out);
+    if (!arq) return;
+
+    for (int i = 0; i < qtd && i < 5; i++) {
+        arq << lista[i].nick << " " << lista[i].points << " " << lista[i].tempo << "\n";
+    }
+    arq.close();
+}
+
+void updateRanking(jogador novo) {
+    jogador lista[6];
+    int qtd = loadRanking(lista);
+
+    lista[qtd] = novo;
+    qtd++;
+
+    for (int i = 0; i < qtd - 1; i++) {
+        for (int j = i + 1; j < qtd; j++) {
+            if (lista[i].points < lista[j].points || 
+               (lista[i].points == lista[j].points && lista[i].tempo > lista[j].tempo)) {
+                jogador temp = lista[i];
+                lista[i] = lista[j];
+                lista[j] = temp;
+            }
+        }
+    }
+
+    if (qtd > 5) qtd = 5; 
+    saveRanking(lista, qtd);
+}
+
+void placar() {
     clear();
     cout << "=========================================\n";
     cout << "                RANKING\n";
     cout << "=========================================\n\n";
-    int num = 1;
-    jogador maior, menor;
-    for(int i = 0; i<indice; i++){
-        for(int f = i + 1; f<indice; f++){
-            if(info[i].points<info[f].points){
-                maior = info[f];
-                menor = info[i];
-                info[i] = maior;
-                info[f] = menor;
-                
-            }
-            else if(info[i].points>info[f].points){
-                maior = info[i];
-                menor = info[f];
-                info[i] = maior;
-                info[f] = menor;
-            }
-            else{
-                maior = info[i];
-                menor = info[f];
-                info[i] = maior;
-                info[f] = menor;
-            }
+    
+    jogador lista[5];
+    int qtd = loadRanking(lista);
+
+    if (qtd == 0) {
+        cout << "Nenhum registro encontrado ainda!\n";
+    } else {
+        for (int i = 0; i < qtd; i++) {
+            cout << i + 1 << " - " << setw(5) << left << lista[i].nick 
+                 << " " << lista[i].points << " Tempo: " << lista[i].tempo << "s\n";
         }
-    }
-    for(int k = 0; k<indice; k++)
-    {
-        cout<<num<<" - "<<info[k].nick<<" "<<info[k].points<<" Tempo: "<<info[k].tempo<<"\n";
-        num++;
     }
 }
-bool WASD(int board[4][4], jogador info[]){
 
-    char tecla;
-    cout << "\nMovimento (W A S D): ";
-    cout << "\nSair (Q): ";
-    auto inicio = chrono :: steady_clock :: now();
-    cin >> tecla;
-    auto fim = chrono :: steady_clock :: now();
-    info[indice].tempo +=
-        chrono :: duration_cast<
-        chrono :: seconds
-        >(fim - inicio).count();
-    while(tecla!='w' && tecla!='W' &&
-          tecla!='a' && tecla!='A' &&
-          tecla!='s' && tecla!='S' &&
-          tecla!='d' && tecla!='D' &&
-          tecla!='q' && tecla!='Q'){
-        cout << "Digite uma tecla valida: ";
-        auto inicio = chrono :: steady_clock :: now();
-        cin >> tecla;
-        auto fim = chrono :: steady_clock :: now();
-        info[indice].tempo +=
-        chrono :: duration_cast<
-        chrono :: seconds
-        >(fim - inicio).count();
-    }
-
-    switch(tecla){
-
-case 'w':
-case 'W':
-
-    for(int j = 0; j < 4; j++){
-        for(int i = 1; i < 4; i++){
-
-            if(board[i][j] != 0){
-
-                int k = i;
-
-                while(k > 0 && board[k-1][j] == 0){
-                    board[k-1][j] = board[k][j];
-                    board[k][j] = 0;
-                    k--;
-                }
-
-                while(k > 0 &&
-                      board[k-1][j] == board[k][j]){
-
-                    board[k-1][j] += board[k][j];
-                    board[k][j] = 0;
-                    break;
-                }
-            }
+bool checkWin(int board[4][4]) {
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 4; j++) {
+            if (board[i][j] == 2048) return true;
         }
     }
-    break;
+    return false;
+}
 
-case 's':
-case 'S':
-
-    for(int j = 0; j < 4; j++){
-        for(int i = 2; i >= 0; i--){
-
-            if(board[i][j] != 0){
-
-                int k = i;
-
-                while(k < 3 && board[k+1][j] == 0){
-                    board[k+1][j] = board[k][j];
-                    board[k][j] = 0;
-                    k++;
-                }
-
-                while(k < 3 &&
-                      board[k+1][j] == board[k][j]){
-
-                    board[k+1][j] += board[k][j];
-                    board[k][j] = 0;
-                    break;
-                }
-            }
+bool checkGameOver(int board[4][4]) {
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 4; j++) {
+            if (board[i][j] == 0) return false; 
+            if (i < 3 && board[i][j] == board[i+1][j]) return false; 
+            if (j < 3 && board[i][j] == board[i][j+1]) return false; 
         }
     }
-    break;
+    return true; 
+}
 
-case 'a':
-case 'A':
+bool WASD(int board[4][4], jogador &info_atual) {
+    char tecla = ' ';
+    bool pressionou = false;
 
-    for(int i = 0; i < 4; i++){
-        for(int j = 1; j < 4; j++){
+    cout << "\nMovimento (W A S D) ou Sair (Q): \n";
+    
+    // Captura o momento em que entramos na espera da tecla
+    auto inicio_espera = chrono::steady_clock::now();
 
-            if(board[i][j] != 0){
-
-                int k = j;
-
-                while(k > 0 && board[i][k-1] == 0){
-                    board[i][k-1] = board[i][k];
-                    board[i][k] = 0;
-                    k--;
-                }
-
-                while(k > 0 &&
-                      board[i][k-1] == board[i][k]){
-
-                    board[i][k-1] += board[i][k];
-                    board[i][k] = 0;
-                    break;
-                }
-            }
-        }
-    }
-    break;
-
-case 'd':
-case 'D':
-
-    for(int i = 0; i < 4; i++){
-        for(int j = 2; j >= 0; j--){
-
-            if(board[i][j] != 0){
-
-                int k = j;
-
-                while(k < 3 && board[i][k+1] == 0){
-                    board[i][k+1] = board[i][k];
-                    board[i][k] = 0;
-                    k++;
-                }
-
-                while(k < 3 &&
-                      board[i][k+1] == board[i][k]){
-
-                    board[i][k+1] += board[i][k];
-                    board[i][k] = 0;
-                    break;
-                }
-            }
-        }
-    }
-    break;
+    // Loop contínuo que atualiza o tempo enquanto o utilizador não carrega em nada
+    while (!pressionou) {
+        auto agora = chrono::steady_clock::now();
+        long segundos_decorridos = chrono::duration_cast<chrono::seconds>(agora - inicio_espera).count();
         
-    case 'q':
-    case 'Q':
-        return false;
-        break;
+        // Se passou 1 segundo ou mais, atualiza o tempo do jogador e redesenha o placar
+        if (segundos_decorridos >= 1) {
+            info_atual.tempo += segundos_decorridos;
+            printBoard(board);
+            cout << "\nJogador: " << info_atual.nick;
+            cout << "\nPontos: " << info_atual.points;
+            cout << "\nTempo: " << info_atual.tempo << "s\n";
+            cout << "\nMovimento (W A S D) ou Sair (Q): \n";
+            inicio_espera = agora; // Reinicia a contagem do segundo atual
+        }
+
+        if (autoEnter()) {
+            tecla = getch();
+            pressionou = true;
+        }
+            usleep(10000);
     }
-    printBoard(board);
+
+    auto fim_clique = chrono::steady_clock::now();
+    info_atual.tempo += chrono::duration_cast<chrono::seconds>(fim_clique - inicio_espera).count();
+
+    tecla = tolower(tecla);
+    if (tecla == 'q') return false; 
+
+    if (tecla != 'w' && tecla != 'a' && tecla != 's' && tecla != 'd') {
+        return true; // Ignora teclas inválidas sem quebrar o jogo
+    }
+
+    int copia[4][4];
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 4; j++) copia[i][j] = board[i][j];
+    }
+
+    bool combinado[4][4] = {false}; 
+
+    if (tecla == 'w') {
+        for (int j = 0; j < 4; j++) {
+            for (int i = 1; i < 4; i++) {
+                if (board[i][j] != 0) {
+                    int k = i;
+                    while (k > 0 && board[k - 1][j] == 0) {
+                        board[k - 1][j] = board[k][j];
+                        board[k][j] = 0;
+                        k--;
+                    }
+                    if (k > 0 && board[k - 1][j] == board[k][j] && !combinado[k - 1][j]) {
+                        board[k - 1][j] *= 2;
+                        info_atual.points += board[k - 1][j]; 
+                        board[k][j] = 0;
+                        combinado[k - 1][j] = true; 
+                    }
+                }
+            }
+        }
+    }
+    else if (tecla == 's') {
+        for (int j = 0; j < 4; j++) {
+            for (int i = 2; i >= 0; i--) {
+                if (board[i][j] != 0) {
+                    int k = i;
+                    while (k < 3 && board[k + 1][j] == 0) {
+                        board[k + 1][j] = board[k][j];
+                        board[k][j] = 0;
+                        k++;
+                    }
+                    if (k < 3 && board[k + 1][j] == board[k][j] && !combinado[k + 1][j]) {
+                        board[k + 1][j] *= 2;
+                        info_atual.points += board[k + 1][j]; 
+                        board[k][j] = 0;
+                        combinado[k + 1][j] = true; 
+                    }
+                }
+            }
+        }
+    }
+    else if (tecla == 'a') {
+        for (int i = 0; i < 4; i++) {
+            for (int j = 1; j < 4; j++) {
+                if (board[i][j] != 0) {
+                    int k = j;
+                    while (k > 0 && board[i][k - 1] == 0) {
+                        board[i][k - 1] = board[i][k];
+                        board[i][k] = 0;
+                        k--;
+                    }
+                    if (k > 0 && board[i][k - 1] == board[i][k] && !combinado[i][k - 1]) {
+                        board[i][k - 1] *= 2;
+                        info_atual.points += board[i][k - 1]; 
+                        board[i][k] = 0;
+                        combinado[i][k - 1] = true; 
+                    }
+                }
+            }
+        }
+    }
+    else if (tecla == 'd') {
+        for (int i = 0; i < 4; i++) {
+            for (int j = 2; j >= 0; j--) {
+                if (board[i][j] != 0) {
+                    int k = j;
+                    while (k < 3 && board[i][k + 1] == 0) {
+                        board[i][k + 1] = board[i][k];
+                        board[i][k] = 0;
+                        k++;
+                    }
+                    if (k < 3 && board[i][k + 1] == board[i][k] && !combinado[i][k + 1]) {
+                        board[i][k + 1] *= 2;
+                        info_atual.points += board[i][k + 1]; 
+                        board[k][j] = 0;
+                        combinado[i][k + 1] = true; 
+                    }
+                }
+            }
+        }
+    }
+
+    bool mudou = false;
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 4; j++) {
+            if (board[i][j] != copia[i][j]) mudou = true;
+        }
+    }
+
+    if (mudou) { 
+        spawnNumber(board); 
+    }
+
     return true;
 }
 
-void start(jogador info[]){
-    
+void start(jogador info[]) {
     clear();
-
     cout << "Digite seu nick (4 caracteres): ";
+    
+    jogador p; 
+    cin >> p.nick;
 
-    cin.ignore();
+    int board[4][4] = {0}; 
 
-    cin.getline(info[indice].nick,5);
+    spawnNumber(board);
+    spawnNumber(board);
 
-    int board[4][4]={0};
-
-    int l1,c1,l2,c2;
-
-    do{
-
-        l1=randomNumber();
-        c1=randomNumber();
-        l2=randomNumber();
-        c2=randomNumber();
-
-    }while(l1==l2 && c1==c2);
-    /* test de números enquanto a função que vai gerar o números nn estiver pronta
-     board[l2][c1] =2; 
-    board[l1][c2] = 4; */
-    board[l1][c1]=2;
-    board[l2][c2]=4;
-
-    while(true){
-
+    while (true) {
         printBoard(board);
 
-        cout << "\nJogador: " << info[indice].nick;
-        cout << "\nPontos: " << info[indice].points << endl;
+        cout << "\nJogador: " << p.nick;
+        cout << "\nPontos: " << p.points;
+        cout << "\nTempo: " << p.tempo << "s\n";
 
-        if(!WASD(board, info)){
-            indice++;
-            return;
+        if (checkWin(board)) { 
+            printBoard(board);
+            cout << "\n🎉 PARABÉNS! Você alcançou a peça 2048 e venceu!\n";
+            updateRanking(p); 
+            break;
+        }
+
+        if (checkGameOver(board)) { 
+            printBoard(board);
+            cout << "\n FIM DE JOGO seu BETA! Não há mais movimentos possíveis.\n";
+            updateRanking(p); 
+            break;
+        }
+
+        if (!WASD(board, p)) {
+            cout << "\nPartida encerrada. Gravando dados no ranking...\n";
+            updateRanking(p); 
+            break;
         }
     }
-
+    
+    cout << "\nPressione ENTER para continuar...";
+    cin.ignore(67, '\n');
+    cin.get();
 }
-void menu() {
 
+void menu() {
     int opcao;
     jogador info[10];
     do {
-
         clear();
-
         cout << R"(
-
  ██████╗  ██████╗ ██╗  ██╗ █████╗
  ╚════██╗██╔═████╗██║  ██║██╔══██╗
   █████╔╝██║██╔██║███████║╚█████╔╝
@@ -347,49 +443,39 @@ void menu() {
 
 Escolha uma opcao: )";
 
-        cin >> opcao;
-
-        switch(opcao){
-
-        case 1:
-            start(info);
-            break;
-
-        case 2:
-
-            placar(info);
-            break;
-
-        case 3:
-
-            rules();
-            break;
-
-        case 0:
-
-            cout << "\nObrigado por jogar!\n";
-            break;
-
-        default:
-
-            cout << "\nOpção invalida!\n";
+        if (!(cin >> opcao)) {
+            cin.clear();
+            cin.ignore(1000, '\n');
+            opcao = -1;
         }
 
-        if(opcao != 0 && opcao != 1){
+        switch (opcao) {
+            case 1:
+                start(info);
+                break;
+            case 2:
+                placar();
+                break;
+            case 3:
+                rules();
+                break;
+            case 0:
+                cout << "\nObrigado por jogar!\n";
+                break;
+            default:
+                cout << "\nOpção invalida!\n";
+        }
 
+        if (opcao != 0 && opcao != 1) {
             cout << "\n\nPressione ENTER para voltar ao menu...";
-
-            cin.ignore(1000,'\n');
+            cin.ignore(1000, '\n');
             cin.get();
-
         }
 
-    }while(opcao != 0);
+    } while (opcao != 0);
 }
 
-int main(){
-
+int main() {
     menu();
-
     return 0;
 }
