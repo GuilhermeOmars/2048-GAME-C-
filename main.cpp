@@ -158,7 +158,7 @@ void placar() {
     int qtd = loadRanking(lista);
 
     if (qtd == 0) {
-        cout << "Nenhum registro encontrado ainda!\n";
+        cout << "Nenhum registro encontrado ainda! Niguém foi digno para tal seja o primeiro!\n";
     } else {
         for (int i = 0; i < qtd; i++) {
             cout << i + 1 << " - " << setw(5) << left << lista[i].nick 
@@ -288,7 +288,7 @@ bool WASD(int board[4][4], jogador &info_atual) {
                     if (k < 3 && board[i][k + 1] == board[i][k] && !combinado[i][k + 1]) {
                         board[i][k + 1] *= 2;
                         info_atual.points += board[i][k + 1]; 
-                        board[i][k] = 0; // Corrigido aqui de board[k][j] para board[i][k]
+                        board[i][k] = 0; 
                         combinado[i][k + 1] = true; 
                     }
                 }
@@ -330,20 +330,20 @@ void start(jogador info[]) {
 
         if (checkWin(board)) { 
             printBoard(board);
-            cout << "\nPARABENS! Voce alcancou a peca 2048 e venceu!\n";
+            cout << "\nPARABENS! Voce alcancou a peca 2048 e venceu! Um alfa realmente\n";
             updateRanking(p); 
             break;
         }
 
         if (checkGameOver(board)) { 
             printBoard(board);
-            cout << "\nFIM DE JOGO! Nao ha mais movimentos possiveis.\n";
+            cout << "\nFIM DE JOGO! Nao ha mais movimentos possiveis. Realmente é isso que sobra pro beta\n";
             updateRanking(p); 
             break;
         }
 
         if (!WASD(board, p)) {
-            cout << "\nPartida encerrada. Gravando dados no ranking...\n";
+            cout << "\nPartida encerrada. Gravando dados no ranking... Será que tu é um sigma da Bahia\n";
             updateRanking(p); 
             break;
         }
